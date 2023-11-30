@@ -1,0 +1,11 @@
+# ignore all files
+*
+
+# unignore files with extensions
+!*.*
+
+# unignore directories
+!*/
+
+# nix develop root
+profile*

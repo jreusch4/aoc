@@ -6,7 +6,7 @@ app "hello"
 main =
     numbers = input
         |> Str.split "\n"
-        |> List.map parseNumbers
+        |> List.map parseNumbersPart2
     
     calibrations =
         lineNumbers <- List.keepOks numbers
@@ -28,7 +28,11 @@ getInits = \line ->
     soFar, idx <- List.walk (List.range { start: At 0, end: Length (List.len chars) }) []
     List.append soFar (chars |> List.dropFirst idx |> Str.joinWith "")
 
-parseNumbers = \line ->
+parseNumbersPart1 = \line ->
+    init <- getInits line |> List.keepOks
+    findPrefix numberDigits init
+
+parseNumbersPart2 = \line ->
     init <- getInits line |> List.keepOks
     _ <- findPrefix numberNames init |> Result.onErr
     findPrefix numberDigits init

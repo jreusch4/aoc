@@ -41,6 +41,7 @@
 					openssl
 					zlib
 					ncurses6
+					glibc
 				];
 				
 				roc = stdenv.mkDerivation {
@@ -59,7 +60,10 @@
 						install -m755 -D $src/roc $out/bin/roc
 						patchelf --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" $out/bin/roc
 						librarypath="${lib.makeLibraryPath deps}"
-						wrapProgramShell $out/bin/roc --prefix LD_LIBRARY_PATH : "$librarypath"
+						wrapProgramShell $out/bin/roc \
+							--prefix LD_LIBRARY_PATH : "$librarypath" \
+							--set NIX_GLIBC_PATH "${lib.makeLibraryPath [pkgs.glibc]}" \
+							--set NIX_LIBGCC_S_PATH "${lib.makeLibraryPath [stdenv.cc.cc]}"
 
 						runHook postInstall
 					'';

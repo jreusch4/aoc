@@ -4,6 +4,7 @@ app "hello"
     provides [main] to pf
 
 prefixes = \str, soFar ->
+    dbg T str soFar
     if Str.isEmpty str then
         soFar
 

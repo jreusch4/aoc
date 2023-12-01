@@ -9,3 +9,6 @@
 
 # nix develop root
 profile*
+
+# roc temp files
+*.ll

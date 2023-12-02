@@ -43,8 +43,12 @@ parseGame = \line ->
     id <- Str.toNat idStr |> Result.try
 
     draws = drawsStr |> Str.split ";" |> List.keepOks parseDraw
-    
-    Ok { id, draws }
+
+    if List.isEmpty draws then
+        Err EmptyDraws
+
+    else
+        Ok { id, draws }
     
 
 parseDraw = \str ->

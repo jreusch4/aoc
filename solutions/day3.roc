@@ -5,49 +5,50 @@ app "hello"
 
 
 main =
+    chars = input |> Str.trim |> Str.split "\n" |> List.map Str.toUtf8
+    parts = chars |> runs2d isDigit
+
+
+    part1 =
+        symbols = chars |> runs2d isSymbol
+
+        validParts =
+            part <- parts |> List.keepIf
+            symbol <- symbols |> List.any
+            surr <- surrounding symbol |> List.any
+            intersects surr part
+
+        partNumbers = validParts |> List.keepOks (\part -> partNumber chars part)
+
+        List.sum partNumbers
+
+
+    part2 = 
+        gearRatios =
+            gear <- chars |> runs2d isGear |> List.keepOks
+            surr = surrounding gear
+
+            adjacentParts =
+                part <- parts |> List.keepIf
+                s <- surr |> List.any
+                intersects s part
+
+            when adjacentParts is
+                [run1, run2] ->
+                    partNumber1 <- partNumber chars run1 |> Result.try
+                    partNumber2 <- partNumber chars run2 |> Result.try
+                    Ok (partNumber1 * partNumber2)
+
+                _ ->
+                    Err NotAGear
+            
+        List.sum gearRatios
+        
     _ <- Stdout.line "Part 1: \(Num.toStr part1)" |> Task.await
     _ <- Stdout.line "Part 2: \(Num.toStr part2)" |> Task.await
     Task.ok {}
 
 
-chars = input |> Str.trim |> Str.split "\n" |> List.map Str.toUtf8
-parts = chars |> runs2d isDigit
-
-
-part1 =
-    symbols = chars |> runs2d isSymbol
-
-    validParts =
-        part <- parts |> List.keepIf
-        symbol <- symbols |> List.any
-        surr <- surrounding symbol |> List.any
-        intersects surr part
-
-    partNumbers = validParts |> List.keepOks partNumber
-
-    List.sum partNumbers
-
-
-part2 = 
-    gearRatios =
-        gear <- chars |> runs2d isGear |> List.keepOks
-        surr = surrounding gear
-
-        adjacentParts =
-            part <- parts |> List.keepIf
-            s <- surr |> List.any
-            intersects s part
-
-        when adjacentParts is
-            [run1, run2] ->
-                partNumber1 <- partNumber run1 |> Result.try
-                partNumber2 <- partNumber run2 |> Result.try
-                Ok (partNumber1 * partNumber2)
-
-            _ ->
-                Err NotAGear
-            
-    List.sum gearRatios
     
 
 isDigit = \chr ->
@@ -63,7 +64,7 @@ isGear = \chr ->
 Run : { line: I32, start: I32, end: I32 }
 
 
-partNumber = \part ->
+partNumber = \chars, part ->
     line <- chars |> List.get (Num.toNat part.line) |> Result.try
     str <- line
         |> Str.fromUtf8Range

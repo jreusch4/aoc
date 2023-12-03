@@ -11,10 +11,10 @@
 		inherit (nixpkgs) lib;
 		
 		hashes = {
-			"x86_64-linux"= "1lj58a1k6di5bsf2zkjd1rsqkhxh6dzbj3ibgmncz9qy2vlikczh";
-			"aarch64-linux" = "1xwfahqp8aja6a6sivvqj6m33zrjp41zh21hhqfkq6hhn8bq5irj";
-			"x86_64-darwin" = "0d0w6bflw2ar9z9ygk8dfqacxw2xlg9fdjgk3hr7ssrbabbgqn5x";
-			"aarch64-darwin" = "0nnkkcgq2l98gafmjhh0kig8xkprrqpg8nwn743xjgid0q17gv7c";
+			"x86_64-linux"= "1ybk47lnq75kx0a1d6f5d99qbwp0vi7051rz5ic9vnrymwfq273d";
+			# "aarch64-linux" = "1xwfahqp8aja6a6sivvqj6m33zrjp41zh21hhqfkq6hhn8bq5irj";
+			# "x86_64-darwin" = "0d0w6bflw2ar9z9ygk8dfqacxw2xlg9fdjgk3hr7ssrbabbgqn5x";
+			# "aarch64-darwin" = "0nnkkcgq2l98gafmjhh0kig8xkprrqpg8nwn743xjgid0q17gv7c";
 		};
 
 		filename = {

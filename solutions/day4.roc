@@ -15,23 +15,22 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
 
 main =
     cards = input |> Str.trim |> Str.split "\n" |> List.keepOks parseCard
-    dbg List.len cards
 
-    points = cards |> List.map getPoints |> List.sum
-    _ <- Stdout.line "Part 1: \(Num.toStr points)" |> Task.await
+    part1 =
+        acc, { winningNumbers, cardNumbers } <- List.walk 0 cards
+        numberOfWinners = Set.intersection winningNumbers cardNumbers |> Set.len
+
+        if numberOfWinners > 0 then
+            acc + Num.powInt 2 (numberOfWinners - 1)
+
+        else
+            acc
+        
+
+    _ <- Stdout.line "Part 1: \(Num.toStr part1)" |> Task.await
     
     Task.ok {}
 
-
-getPoints = \{ winningNumbers, cardNumbers } ->
-    numberOfWinners = Set.intersection winningNumbers cardNumbers |> Set.len
-    
-    if numberOfWinners > 0 then
-        Num.powInt 2 (numberOfWinners - 1)
-
-    else
-        0
-    
 
 parseCard = \line ->
     { before: cardIdStr, after: numbersStr } <- line |> Str.splitFirst ": " |> Result.try

@@ -9,22 +9,30 @@
 	outputs = { self, nixpkgs }:
 	let
 		inherit (nixpkgs) lib;
-		
-		hashes = {
-			"x86_64-linux"= "1ybk47lnq75kx0a1d6f5d99qbwp0vi7051rz5ic9vnrymwfq273d";
-			# "aarch64-linux" = "1xwfahqp8aja6a6sivvqj6m33zrjp41zh21hhqfkq6hhn8bq5irj";
-			# "x86_64-darwin" = "0d0w6bflw2ar9z9ygk8dfqacxw2xlg9fdjgk3hr7ssrbabbgqn5x";
-			# "aarch64-darwin" = "0nnkkcgq2l98gafmjhh0kig8xkprrqpg8nwn743xjgid0q17gv7c";
+
+		sources = {
+			"x86_64-linux"= {
+				name = "roc_nightly-linux_x86_64-latest.tar.gz";
+				hash = "1ybk47lnq75kx0a1d6f5d99qbwp0vi7051rz5ic9vnrymwfq273d";
+			};
+			"aarch64-linux" = {
+				
+				name = "roc_nightly-linux_arm64-latest.tar.gz";
+				# hash = "1xwfahqp8aja6a6sivvqj6m33zrjp41zh21hhqfkq6hhn8bq5irj";
+			};
+
+			"x86_64-darwin" = {
+				name = "roc_nightly-macos_x86_64-latest.tar.gz";		
+				# hash = "0d0w6bflw2ar9z9ygk8dfqacxw2xlg9fdjgk3hr7ssrbabbgqn5x";
+			};
+
+			"aarch64-darwin" = {
+				name = "roc_nightly-macos_apple_silicon-latest.tar.gz";			
+				# hash = "0nnkkcgq2l98gafmjhh0kig8xkprrqpg8nwn743xjgid0q17gv7c";
+			};
 		};
 
-		filename = {
-			"x86_64-linux"= "roc_nightly-linux_x86_64-latest.tar.gz";
-			"aarch64-linux" = "roc_nightly-linux_arm64-latest.tar.gz";
-			"x86_64-darwin" = "roc_nightly-macos_x86_64-latest.tar.gz";
-			"aarch64-darwin" = "roc_nightly-macos_apple_silicon-latest.tar.gz";
-		};
-
-		systems = builtins.attrNames hashes;
+		systems = builtins.attrNames sources;
 
 		forEachSystem = f: lib.genAttrs systems (system: f system);
 	in {
@@ -32,9 +40,6 @@
 			with import nixpkgs { inherit system; };
 			let
 				inherit (pkgs) stdenv;
-
-				os = if stdenv.isDarwin then "macos" else "linux";
-				arch = if stdenv.isAarch64 then "arm64" else "x86_64";
 				
 				deps = with pkgs; [
 					stdenv.cc.cc
@@ -43,13 +48,15 @@
 					ncurses6
 					glibc
 				];
+
+				src = sources.${system};
 				
 				roc = stdenv.mkDerivation {
 					name = "roc";
 					
 					src = builtins.fetchTarball {
-						url = "https://github.com/roc-lang/roc/releases/download/nightly/${filename.${system}}";
-						sha256 = hashes.${system};
+						url = "https://github.com/roc-lang/roc/releases/download/nightly/${src.name}";
+						sha256 = src.hash;
 					};
 
 					nativeBuildInputs = [ makeShellWrapper ];

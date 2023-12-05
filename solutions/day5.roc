@@ -41,11 +41,10 @@ humidity-to-location map:
 """
 
 main =
-    almanac = input |> parseAlmanac emptyAlmanac |> unwrap "could not parse input"
-    
-    part1 =
-        locations =
-            seed <- almanac.seeds |> List.map
+    solve = \almanac ->
+        minLocation, { start, len } <- almanac.seeds |> List.walk (Num.toNat Num.maxU64)
+        minLocation2, seed <- List.range { start: At start, end: Length len } |> List.walk minLocation
+        location =
             seed
                 |> lookupDest almanac.seedToSoil
                 |> lookupDest almanac.soilToFertilizer
@@ -54,10 +53,49 @@ main =
                 |> lookupDest almanac.lightToTemperature
                 |> lookupDest almanac.temperatureToHumidity
                 |> lookupDest almanac.humidityToLocation
+        Num.min location minLocation2
 
-        locations |> List.min |> unwrap "locations was empty"
+        
+    parseSeedsPart1 = \seedsStr ->    
+        seeds <- seedsStr
+            |> Str.split " "
+            |> List.mapTry Str.toNat
+            |> Result.map
+
+        seed <- List.map seeds
+        { start: seed, len: 1 }
+
+
+    part1 = input
+        |> parseAlmanac parseSeedsPart1 emptyAlmanac
+        |> Result.map solve
+        |> unwrap "part 1"
 
     _ <- Stdout.line "Part 1: \(Num.toStr part1)" |> Task.await
+
+
+    parseSeedsPart2 = \seedsStr ->
+        seeds <- seedsStr
+            |> Str.split " "
+            |> List.chunksOf 2
+            |> List.mapTry
+
+        when seeds is
+            [startStr, lenStr] ->
+                start <- Str.toNat startStr |> Result.try
+                len <- Str.toNat lenStr |> Result.try
+                Ok { start, len }
+
+            _ ->
+                Err InvalidSeed
+
+    
+    part2 = input
+        |> parseAlmanac parseSeedsPart2 emptyAlmanac
+        |> Result.map solve
+        |> unwrap "part 2"
+        
+    _ <- Stdout.line "Part 2: \(Num.toStr part2)" |> Task.await
 
     Task.ok {}
 
@@ -75,7 +113,7 @@ MapEntry : { dest: Nat, src: Nat, len: Nat }
 
 
 Almanac :
-    { seeds : List Nat
+    { seeds : List { start: Nat, len: Nat }
     , seedToSoil : Map
     , soilToFertilizer : Map
     , fertilizerToWater : Map
@@ -124,8 +162,7 @@ lookupDest = \src, map ->
 ###
 
 
-parseAlmanac : Str, Almanac -> Result Almanac [InvalidMapEntry, InvalidAlmanacSection, InvalidNumStr]
-parseAlmanac = \str, almanac ->
+parseAlmanac = \str, parseSeeds, almanac ->
     (line, rest) = chompLine str
     when line is
         "" ->
@@ -133,54 +170,59 @@ parseAlmanac = \str, almanac ->
                 Ok almanac
 
             else
-                parseAlmanac rest almanac
+                parseAlmanac rest parseSeeds almanac
 
         _ if Str.startsWith line "seeds: " ->
             { after: seedsStr } <- line |> Str.splitFirst ": " |> Result.try
-            
-            seeds <- seedsStr
-                |> Str.split " "
-                |> List.mapTry Str.toNat 
-                |> Result.try
-                
-            parseAlmanac rest { almanac & seeds }
+            seeds <- parseSeeds seedsStr |> Result.try
+            parseAlmanac rest parseSeeds { almanac & seeds }
 
         "seed-to-soil map:" ->
             (seedToSoil, rest2) <- parseMapBody rest almanac.seedToSoil |> Result.try
-            parseAlmanac rest2 { almanac & seedToSoil }
+            parseAlmanac rest2 parseSeeds { almanac & seedToSoil }
 
         "soil-to-fertilizer map:" ->
             (soilToFertilizer, rest2) <- parseMapBody rest almanac.soilToFertilizer |> Result.try
-            parseAlmanac rest2 { almanac & soilToFertilizer }
+            parseAlmanac rest2 parseSeeds { almanac & soilToFertilizer }
 
         "fertilizer-to-water map:" ->
             (fertilizerToWater, rest2) <- parseMapBody rest almanac.fertilizerToWater |> Result.try
-            parseAlmanac rest2 { almanac & fertilizerToWater }
+            parseAlmanac rest2 parseSeeds { almanac & fertilizerToWater }
 
         "water-to-light map:" ->
             (waterToLight, rest2) <- parseMapBody rest almanac.waterToLight |> Result.try
-            parseAlmanac rest2 { almanac & waterToLight }
+            parseAlmanac rest2 parseSeeds { almanac & waterToLight }
 
         "light-to-temperature map:" ->
             (lightToTemperature, rest2) <- parseMapBody rest almanac.lightToTemperature |> Result.try
-            parseAlmanac rest2 { almanac & lightToTemperature }
+            parseAlmanac rest2 parseSeeds { almanac & lightToTemperature }
 
         "temperature-to-humidity map:" ->
             (temperatureToHumidity, rest2) <- parseMapBody rest almanac.temperatureToHumidity |> Result.try
-            parseAlmanac rest2 { almanac & temperatureToHumidity }
+            parseAlmanac rest2 parseSeeds { almanac & temperatureToHumidity }
 
         "humidity-to-location map:" ->
             (humidityToLocation, rest2) <- parseMapBody rest almanac.humidityToLocation |> Result.try
-            parseAlmanac rest2 { almanac & humidityToLocation }
+            parseAlmanac rest2 parseSeeds { almanac & humidityToLocation }
 
         _ ->
             Err InvalidAlmanacSection
 
 
 expect
+    parseSeedsPart1 = \seedsStr ->
+        seeds <- seedsStr
+            |> Str.split " "
+            |> List.mapTry Str.toNat
+            |> Result.map
+
+        seed <- List.map seeds
+        { start: seed, len: 1 }
+
     parsed : Almanac
     parsed =
         { seeds : [79, 14, 55, 13]
+            |> List.map (\start -> { start, len: 1 })
         , seedToSoil :
             [ { dest: 50, src: 98, len: 2 }
             , { dest: 52, src: 50, len: 48 }
@@ -215,7 +257,7 @@ expect
             ]
         }
 
-    result = parseAlmanac example emptyAlmanac
+    result = parseAlmanac example parseSeedsPart1 emptyAlmanac
     
     result == Ok parsed
 

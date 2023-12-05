@@ -13,7 +13,7 @@
 		sources = {
 			"x86_64-linux"= {
 				name = "roc_nightly-linux_x86_64-latest.tar.gz";
-				hash = "1ybk47lnq75kx0a1d6f5d99qbwp0vi7051rz5ic9vnrymwfq273d";
+				hash = "19iv9wwjpj41h1l9qy8cdz4c260arklmrva2bmnyqcycs2gm88rp";
 			};
 			"aarch64-linux" = {
 				
@@ -50,6 +50,28 @@
 				];
 
 				src = sources.${system};
+
+				# debugir = pkgs.stdenv.mkDerivation {
+    #       name = "debugir";
+    #       src = pkgs.fetchFromGitHub {
+    #         owner = "vaivaswatha";
+    #         repo = "debugir";
+    #         rev = "b981e0b74872d9896ba447dd6391dfeb63332b80";
+    #         sha256 = "Gzey0SF0NZkpiObk5e29nbc41dn4Olv1dx+6YixaZH0=";
+    #       };
+    #       buildInputs = with pkgs; [ cmake libxml2 llvmPackages_13.llvm.dev ];
+    #       buildPhase = ''
+    #         mkdir build
+    #         cd build
+    #         cmake -DLLVM_DIR=${llvmPackages_13.llvm.dev} -DCMAKE_BUILD_TYPE=Release ../
+    #         cmake --build ../
+    #         cp ../debugir .
+    #       '';
+    #       installPhase = ''
+    #         mkdir -p $out/bin
+    #         cp debugir $out/bin
+    #       '';
+    #     };
 				
 				roc = stdenv.mkDerivation {
 					name = "roc";
@@ -61,6 +83,7 @@
 
 					nativeBuildInputs = [ makeShellWrapper ];
 
+					# --prefix PATH : "${debugir}/bin" \
 					installPhase = ''
 						runHook preInstall
 
@@ -81,6 +104,8 @@
 					# roc.packages.${system}.cli
 					# roc.packages.${system}.lang-serve
 					roc
+					# debugir
+					# pkgs.llvmPackages_13.libllvm
 				];
 			});
 	};

@@ -4,7 +4,6 @@ app "hello"
     provides [main] to pf
 
 prefixes = \str, soFar ->
-    dbg T str soFar
     if Str.isEmpty str then
         soFar
 
@@ -19,9 +18,7 @@ prefixes = \str, soFar ->
 expect prefixes "abc" [] == ["abc", "c", ""] # passes
 expect prefixes "abc" [] == ["abc", "bc", "c"] # fails
 
-
 main =
-    prefixes "abc" []
-        |> Str.joinWith "|"
-        |> Stdout.line
+    dbg prefixes "abc" []
+    Stdout.line "hi"
 
